@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Shopping List</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="favico.ico" type="image/x-icon"/>
+  <link rel="shortcut icon" href="favico.ico" type="image/x-icon"/>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+  <script src="app.js"></script>
+</head>
+<body ng-app = "shoppingList" ng-controller = "shoppingListCtrl">
+	<div class = "container-fluid">
+		<div class="jumbotron text-center">
+			<h1>Shopping List</h1>
+		</div>
+
+		<div id="accordion">
+
+		  <div class="card" ng-repeat = "x in fixedCategories">
+			<div class="card-header">
+			  <a class="card-link" data-toggle="collapse" href="#{{x.hash}}">{{x.category}} - {{x.num}} {{x.num==1 ? "item" : "items"}}</a>
+			  <button type = "button" class = "btn btn-primary btn-sm sidebutton" ng-click = "showAddItemModal($index)">+</button>
+			</div>
+			<div class="collapse" id = "{{x.hash}}" data-parent="#accordion">
+			  <div class="card-body">
+				<div class="container-fluid">
+					<div class="row">
+						<div class="col" ng-repeat = "y in items[x.category]">
+							<label class="container"><input type="checkbox" ng-model = "selected[x.category][y]"><label class="strikethrough">{{y}}</label><span class="checkmark"></span></label>
+						</div>
+					</div>
+				</div>
+			  </div>
+			</div>
+		  </div>
+		</div>
+		<div class = "btn-group">
+			<button type="button" class="btn btn-primary btn-sm"  data-toggle="modal" data-target="#createCategoryModal">Create Category</button>
+			<button type="button" class="btn btn-primary btn-sm"  data-toggle="modal" data-target="#removeCategoryModal">Remove Category</button>
+			<button type="button" class="btn btn-danger btn-sm" ng-click="removeItems()">Remove Items</button>
+		</div>
+
+
+	</div>
+
+	<div class="modal" id="addItemModal">
+	  <div class="modal-dialog">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h4 class="modal-title">Add Item</h4>
+			<button type="button" class="close" data-dismiss="modal">&times;</button>
+		  </div>
+		  <div class="modal-body">
+			Item:
+			<input type="text" class="form-control" id="item" ng-model="addItemVar"></input>
+			Category:
+			<select class = "form-control" id = "categoryDropdown" ng-model = "addItemCategory">
+				<option ng-repeat = "x in fixedCategories">{{x.category}}</option>
+			</select>
+			<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click = "addItem()">Add</button>
+		  <div class="modal-footer">
+			<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+		  </div>
+
+		</div>
+	  </div>
+	</div>
+	</div>
+
+	<div class="modal" id="createCategoryModal">
+	  <div class="modal-dialog">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h4 class="modal-title">Create Category</h4>
+			<button type="button" class="close" data-dismiss="modal">&times;</button>
+		  </div>
+		  <div class="modal-body">
+			Category:
+			<input type="text" class="form-control" id="category" ng-model="CategoryVar"></input>
+			<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click = "createCategory()">Create Category</button>
+		  <div class="modal-footer">
+			<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+		  </div>
+
+		 </div>
+	   </div>
+	  </div>
+	</div>
+
+	<div class="modal" id="removeCategoryModal">
+	  <div class="modal-dialog">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h4 class="modal-title">Remove Category</h4>
+			<button type="button" class="close" data-dismiss="modal">&times;</button>
+		  </div>
+		  <div class="modal-body">
+			Category:
+			<select class = "form-control" id = "categoryDropdown" ng-model = "CategoryVar">
+				<option ng-repeat = "x in fixedCategories">{{x.category}}</option>
+			</select>
+			<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click = "removeCategory()">Remove Category</button>
+		  <div class="modal-footer">
+			<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+		  </div>
+	
+		  </div>
+		</div>
+	  </div>
+	</div>
+
+</body>
+</html>
