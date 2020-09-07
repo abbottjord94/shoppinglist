@@ -1,84 +1,177 @@
 const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
+const path = require('path');
 const app = express();
 const port = 80;
-
-var list = [];
 
 app.use(bodyParser.json());
 app.use(express.static('site'));
 
-app.get("/getList", function(req, res) {
-	res.send(list);
-	res.sendStatus(200);
+app.post("/getList", function(req, res) {
+	var data = req.body;
+	var listname = data.listname;
+	fs.exists(__dirname + "/lists/" + listname + ".json", function(exists) {
+		if(exists) {
+			fs.readFile(__dirname + "/lists/" + listname + ".json", 'utf8', function(err, file) {
+				if(err) throw err;
+				else {
+					res.send(JSON.parse(file));
+				}
+			});
+		} else {
+			fs.writeFile(__dirname + "/lists/" + listname + ".json", '{}', function(err) {
+				if(err) throw err;
+				else {
+					fs.readFile(__dirname + "/lists/" + listname + ".json", 'utf8', function(err, file) {
+					if(err) throw err;
+					else {
+						res.send(JSON.parse(file));
+					}
+					});
+				}
+			});
+		}
+	});
 });
 
 app.post("/removeItems", function(req, res) {
 	var data = req.body;
-	for(var i in data) {
-		var found = list[data[i].category].find(function(e) {
-			return e == data[i].item;
-		});
-		list[data[i].category].splice(list[data[i].category].indexOf(found), 1);
-	}
-	list[data[i].category].sort();
-	fs.writeFile("list.json", JSON.stringify(list), (err) => {
-		if (err) throw err;
-		console.log("list updated");
+	var listname = data.listname;
+	var list;
+	fs.exists(__dirname + "/lists/" + listname + ".json", function(exists) {
+		if(exists) {
+			fs.readFile(__dirname + "/lists/" + listname + ".json", 'utf8', function(err, file) {
+				if(err) throw err;
+				else {
+					list = JSON.parse(file);
+					for(var i in data.items) {
+						var found = list[data.items[i].category].find(function(e) {
+							return e == data.items[i].item;
+						});
+						list[data.items[i].category].splice(list[data.items[i].category].indexOf(found), 1);
+					}
+					fs.writeFile(__dirname + "/lists/" + listname + ".json", JSON.stringify(list), (err) => {
+						if (err) throw err;
+						console.log("list updated");
+						res.send(list);
+
+					});
+				}
+			});
+		}
+		else {
+			console.log("file not found");
+		}
 	});
-	res.sendStatus(200);
 });
 
 app.post("/addItem", function(req, res) {
 	var data = req.body;
-	var items = data.item.split(", ");
-	for(var i in items) {
-		var found = list[data.category].find(function(element) {
-			return element === data.item;
-		});
-		
-		if(found) {
-			console.log("duplicate found");
-		} else {
-			list[data.category].push(items[i]);
+	var listname = data.listname;
+	var list;
+	
+	fs.exists(__dirname + "/lists/" + listname + ".json", function(exists) {
+		if(exists) {
+			fs.readFile(__dirname + "/lists/" + listname + ".json", 'utf8', function(err, file) {
+				if(err) throw err;
+				else {
+					list = JSON.parse(file);
+						var items = data.item.split(", ");
+						for(var i in items) {
+							var found = list[data.category].find(function(element) {
+								return element === data.item;
+							});
+							
+							if(found) {
+								console.log("duplicate found");
+							} else {
+								list[data.category].push(items[i]);
+							}
+						}
+						list[data.category].sort();
+						fs.writeFile(__dirname + "/lists/" + listname + ".json", JSON.stringify(list), (err) => {
+							if (err) throw err;
+							console.log("list updated");
+							res.send(list);
+						});
+				}
+			});
 		}
-	}
-	list[data.category].sort();
-	fs.writeFile("list.json", JSON.stringify(list), (err) => {
-		if (err) throw err;
-			console.log("list updated");
-		});
-	res.sendStatus(200);
+		else {
+			res.sendStatus(404);
+		}
+	});
+	
+
 });
 
 app.post("/createCategory", function(req, res) {
 	var data = req.body;
-	list[data.category] = [];	
-	fs.writeFile("list.json", JSON.stringify(list), (err) => {
-		if (err) throw err;
-		console.log("list updated");
+	var listname = data.listname;
+	var list;
+	
+	fs.exists(__dirname + "/lists/" + listname + ".json", function(exists) {
+		if(exists) {
+			fs.readFile(__dirname + "/lists/" + listname + ".json", 'utf8', function(err, file) {
+				if(err) throw err;
+				else {
+					list = JSON.parse(file);
+					if(data.category == "") {
+						list["null"] = [];
+					} else {
+						list[data.category] = [];
+					}
+					fs.writeFile(__dirname + "/lists/" + listname + ".json", JSON.stringify(list), (err) => {
+						if (err) throw err;
+						console.log("list updated");
+						res.send(list);
+					});
+				}
+			});
+		}
+		else {
+			console.log("file not found");
+		}
 	});
-	res.sendStatus(200);
+	
 });
 
 app.post("/removeCategory", function(req, res) {
 	var data = req.body;
-	delete list[data.category];
-	fs.writeFile("list.json", JSON.stringify(list), (err) => {
-		if (err) throw err;
-		console.log("list updated");
+	var listname = data.listname;
+	var list;
+	
+	fs.exists(__dirname + "/lists/" + listname + ".json", function(exists) {
+		if(exists) {
+			fs.readFile(__dirname + "/lists/" + listname + ".json", 'utf8', function(err, file) {
+				if(err) throw err;
+				else {
+					list = JSON.parse(file);
+					delete list[data.category];
+					fs.writeFile(__dirname + "/lists/" + listname + ".json", JSON.stringify(list), (err) => {
+						if (err) throw err;
+						console.log("list updated");
+						res.send(list);
+
+					});
+				}
+			});
+		}
+		else {
+			console.log("file not found");
+		}
 	});
-	res.sendStatus(200);
+	
+
+});
+
+app.use(function(req,res) {
+	res.set('Content-Type', 'text/html');
+	res.sendFile(__dirname + "/site/index.html");
 });
 
 app.listen(port, () => {
 	console.log("Server running on port " + port);
-	fs.readFile("list.json", 'utf8', function(err, data) {
-		if(err) throw err;
-		else {
-			list = JSON.parse(data);
-		}
-	});
-	console.log("List loaded successfully");
+
 });

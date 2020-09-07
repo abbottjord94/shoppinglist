@@ -3,7 +3,9 @@
 		$scope.addItemVar = "";
 		$scope.addItemCategory = "";
 		$scope.CategoryVar = "";
+		$scope.listID = "";
 		$scope.selected = [];
+		
 		$scope.hashCode = function(s) {
 			var h = 0, l = s.length, i = 0;
 			if ( l > 0 )
@@ -11,16 +13,22 @@
 					h = (h << 5) - h + s.charCodeAt(i++) | 0;
 			return h;
 		};
-		
-		$scope.getList = function() {
-			$http.get("/getList").then(function(response) {
-			$scope.items = response.data;
+				
+		$scope.parseList = function(data) {
+			$scope.items = data;
 			$scope.categories = Object.getOwnPropertyNames($scope.items);
 			$scope.categories.sort();
 			$scope.fixedCategories = [];
 			for(x in $scope.categories) {
 				$scope.fixedCategories.push({category: $scope.categories[x], hash: "a" + $scope.hashCode($scope.categories[x]).toString(), num: $scope.items[$scope.categories[x]].length});
 			}
+		}
+		
+		$scope.getList = function() {
+			$http({method: "POST",
+				   url: "/getList",
+				   data: {listname: $scope.listname.substring(1)}}).then(function(response) {
+					$scope.parseList(response.data);
 			});
 		}
 		
@@ -35,9 +43,9 @@
 			$http({
 				method: "POST",
 				url: "/removeItems",
-				data: $scope.removedItems
+				data: {items: $scope.removedItems, listname: $scope.listname.substring(1)}
 			}).then(function(response) {
-				$scope.getList();
+				$scope.parseList(response.data);
 			});
 			$scope.selected = [];
 		}
@@ -46,21 +54,21 @@
 			$http({
 				method: "POST",
 				url: "/createCategory",
-				data: {category: $scope.CategoryVar}
+				data: {category: $scope.CategoryVar, listname: $scope.listname.substring(1)}
 			}).then(function(response) {
-				$scope.getList()
+				$scope.parseList(response.data);
 				$scope.CategoryVar = "";
 			});
 		}
 		
 		$scope.addItem = function() {
-			$scope.addItemData = {category: $scope.addItemCategory, item: $scope.addItemVar};
+			$scope.addItemData = {category: $scope.addItemCategory, item: $scope.addItemVar, listname: $scope.listname.substring(1)};
 			$http({
 				method: "POST",
 				url: "/addItem",
 				data: $scope.addItemData
 			}).then(function(response) {
-				$scope.getList();
+				$scope.parseList(response.data);
 				$scope.addItemCategory = "";
 				$scope.addItemVar = "";
 			});
@@ -70,9 +78,9 @@
 			$http({
 				method: "POST",
 				url: "/removeCategory",
-				data: {category: $scope.CategoryVar}
+				data: {category: $scope.CategoryVar, listname: $scope.listname.substring(1)}
 			}).then(function(response) {
-				$scope.getList();
+				$scope.parseList(response.data);
 				$scope.CategoryVar = "";
 			});
 		}
@@ -87,17 +95,12 @@
 					$scope.addItemCategory = $scope.categories[category];
 				}
 			}
-			/*
-			var foundCategory = addItemCategorySelector.options.find(function(e) {
-				return e.text === $scope.categories[category];
-			});
-			if(foundCategory) {
-				foundCategory.selected = true;
-			}
-			*/
 			$("#addItemModal").modal("show");
 		}
 		
+		//Run things after function definitions as soon as the front end is loaded:
+		
+		$scope.listname = window.location.pathname
 		$scope.getList();
 	});
   
